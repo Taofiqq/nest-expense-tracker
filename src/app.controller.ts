@@ -1,6 +1,15 @@
-import { Controller, Get, Post, Patch, Delete, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { AppService } from './app.service';
 import { data, ReportType } from './data';
+import { v4 as uuid } from 'uuid';
 
 @Controller('report/:type')
 export class AppController {
@@ -14,14 +23,42 @@ export class AppController {
     return data.report.filter((report) => report.type === reportType);
   }
 
-  @Get()
-  getReportById() {
-    return {};
+  @Get(':id')
+  getReportById(@Param('type') type: string, @Param('id') id: string) {
+    console.log('type', type);
+    console.log('id', id);
+    const reportType =
+      type === 'income' ? ReportType.INCOME : ReportType.EXPENSE;
+
+    const report = data.report.find(
+      (report) => report.type === reportType && report.id === id,
+    );
+
+    if (!report) {
+      return 'Report not found';
+    }
+
+    return report;
   }
 
   @Post()
-  createReport() {
-    return 'Create';
+  createReport(
+    @Body()
+    { source, amount }: { source: string; amount: number },
+    @Param('type') type: string,
+  ) {
+    const newReport = {
+      id: uuid(),
+      source,
+      amount,
+      type: type === 'income' ? ReportType.INCOME : ReportType.EXPENSE,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    data.report.push(newReport);
+
+    return newReport;
   }
 
   @Patch()
