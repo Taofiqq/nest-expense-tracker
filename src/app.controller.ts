@@ -62,12 +62,42 @@ export class AppController {
   }
 
   @Patch()
-  updateReport() {
-    return 'Update';
+  updateReport(
+    @Body()
+    { id, source, amount }: { id: string; source: string; amount: number },
+    @Param('type') type: string,
+  ) {
+    const reportType =
+      type === 'income' ? ReportType.INCOME : ReportType.EXPENSE;
+
+    const report = data.report.find(
+      (report) => report.type === reportType && report.id === id,
+    );
+
+    if (!report) {
+      return 'Report not found';
+    }
+
+    report.source = source;
+    report.amount = amount;
+    report.updated_at = new Date();
+
+    return report;
   }
 
-  @Delete()
-  deleteReport() {
-    return 'Delete';
+  @Delete(':id')
+  deleteReport(@Param('id') id: string) {
+    const reportIndex = data.report.findIndex((report) => report.id === id);
+
+    if (reportIndex === -1) {
+      return 'Report not found';
+    }
+
+    const deletedReport = data.report.splice(reportIndex, 1);
+
+    return {
+      message: 'Report deleted',
+      deletedReport,
+    };
   }
 }
